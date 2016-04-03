@@ -44,18 +44,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 }
 
-
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.println("Attempting MQTT connection...");
     // Attempt to connect
     if (client.connect("ESP8266Client", mqtt_user, mqtt_pass)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("ImAlive", "hello world");
+      client.publish("alive", "hello world from ESP8266Client1");
       // ... and resubscribe
-      //client.subscribe("inTopic");
+      client.subscribe("inTopic");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -66,10 +65,9 @@ void reconnect() {
   }
 }
 
-
 void setup_wifi() {
   WiFi.mode(WIFI_STA);
-  //WiFi.setPhyMode(3); // WIFI_PHY_MODE_11N = 3
+  WiFi.setPhyMode(WIFI_PHY_MODE_11N); // Low power
   WiFi.begin(ssid, pass);
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Connection Failed! Rebooting...");
@@ -119,23 +117,18 @@ void setup(){
 
 void loop(){
   ArduinoOTA.handle();
-  int value = LightSensor.getAveragedValue(10);
-  Serial.println(value);
-
   if (!client.connected()){
     reconnect();
   }
   client.loop();
 
-  long now = millis();
-  if (now - lastMsg > 2000) {
-    lastMsg = now;
-    ++value;
-    snprintf (msg, 75, "device: %ld lighting: %ld", "0", value);
-    Serial.print("Publishing message: ");
-    Serial.println(msg);
-    client.publish(mqtt_topic, msg);
-  }
+  int value = LightSensor.getAveragedValueTimes(6);
+  snprintf (msg, 75, "device: %ld lighting: %ld", "0", value);
+  Serial.print("Publish message: ");
+  Serial.println(msg);
+  client.publish(mqtt_topic, msg);
 
-  delay(10000); // Refactor to deep sleep
+  Serial.println("Going to sleep for 8 sec");
+  ESP.deepSleep(1000000*8); // 8 seconds deepsleep
+  Serial.println("Sleeping"); // Should not be reached and printed
 }
