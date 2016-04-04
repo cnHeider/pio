@@ -8,15 +8,27 @@
 #include <LightSensor.h>
 #include <ArduinoOTA.h>
 
-const char* ssid = "**Replace this**";
-const char* pass = "**Replace this**";
-
-const char* mqtt_server = "m21.cloudmqtt.com";
-const char* mqtt_user = "**Replace this**";
-const char* mqtt_pass = "**Replace this**";
-const unsigned mqtt_port = 15739;
-
-const char* mqtt_topic = "lightingLivingRoom";
+#ifndef WIFI_SSID
+#define WIFI_SSID "ReplaceThis"
+#endif
+#ifndef WIFI_PASS
+#define WIFI_PASS "ReplaceThis"
+#endif
+#ifndef MQTT_SERVER
+#define MQTT_SERVER "m21.cloudmqtt.com"
+#endif
+#ifndef MQTT_USER
+#define MQTT_USER "ReplaceThis"
+#endif
+#ifndef MQTT_PASS
+#define MQTT_PASS "ReplaceThis"
+#endif
+#ifndef MQTT_PORT
+#define MQTT_PORT 15739 // MQTT_PORT default for me
+#endif
+#ifndef MQTT_TOPIC
+#define MQTT_TOPIC "lightingLivingRoom" // MQTT_TOPIC default for me
+#endif
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -49,7 +61,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.println("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("ESP8266Client", mqtt_user, mqtt_pass)) {
+    if (client.connect("ESP8266Client", MQTT_USER, MQTT_PASS)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish("alive", "hello world from ESP8266Client1");
@@ -68,7 +80,7 @@ void reconnect() {
 void setup_wifi() {
   WiFi.mode(WIFI_STA);
   WiFi.setPhyMode(WIFI_PHY_MODE_11N); // Low power
-  WiFi.begin(ssid, pass);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Connection Failed! Rebooting...");
     delay(5000);
@@ -111,7 +123,7 @@ void setup(){
   Serial.begin(115200);
   Serial.println("Booting");
   setup_wifi();
-  client.setServer(mqtt_server, mqtt_port);
+  client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
 }
 
@@ -126,7 +138,7 @@ void loop(){
   snprintf (msg, 75, "device: %ld lighting: %ld", "0", value);
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish(mqtt_topic, msg);
+  client.publish(MQTT_TOPIC, msg);
 
   Serial.println("Going to sleep for 8 sec");
   ESP.deepSleep(1000000*8); // 8 seconds deepsleep
